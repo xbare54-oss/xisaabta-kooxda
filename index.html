@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="so">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xisaabta Kooxda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ground: #F5F1E7;
+    --surface: #FDFBF5;
+    --surface-raised: #FFFFFF;
+    --ink: #23281E;
+    --ink-soft: #5B5F51;
+    --line: #DFD8C4;
+    --accent: #1E6E52;
+    --accent-ink: #F5F1E7;
+    --accent-soft: #E4EDE5;
+    --warm: #B96E2C;
+    --warm-soft: #F3E4D2;
+    --shadow: 0 1px 2px rgba(35,40,30,0.06), 0 6px 16px -8px rgba(35,40,30,0.18);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #14180F;
+      --surface: #1B2116;
+      --surface-raised: #222A1B;
+      --ink: #EBE7D8;
+      --ink-soft: #A3A992;
+      --line: #333B28;
+      --accent: #4FAE86;
+      --accent-ink: #0E1710;
+      --accent-soft: #1E2E23;
+      --warm: #E0A05E;
+      --warm-soft: #2E2417;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 20px -8px rgba(0,0,0,0.5);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #14180F;
+    --surface: #1B2116;
+    --surface-raised: #222A1B;
+    --ink: #EBE7D8;
+    --ink-soft: #A3A992;
+    --line: #333B28;
+    --accent: #4FAE86;
+    --accent-ink: #0E1710;
+    --accent-soft: #1E2E23;
+    --warm: #E0A05E;
+    --warm-soft: #2E2417;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 6px 20px -8px rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Work Sans", system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 640px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border-inline: 1px solid var(--line);
+  }
+
+  header {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  h1 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600;
+    font-size: 26px;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .subhead {
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    margin-top: 2px;
+  }
+
+  .invite-btn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: none;
+    border-radius: 8px;
+    padding: 8px 13px;
+    font-family: "Work Sans", system-ui, sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 2px;
+  }
+
+  .invite-btn:hover { filter: brightness(1.08); }
+
+  .invite-panel {
+    position: fixed;
+    inset: 0;
+    background: color-mix(in srgb, var(--ink) 45%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 11;
+  }
+
+  .invite-card {
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 24px;
+    max-width: 380px;
+    width: 100%;
+    box-shadow: var(--shadow);
+  }
+
+  .invite-card h2 {
+    font-family: "Fraunces", serif;
+    font-size: 20px;
+    margin: 0 0 6px;
+  }
+
+  .invite-card p {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin: 0 0 16px;
+    line-height: 1.5;
+  }
+
+  .invite-link-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .invite-link-row input {
+    flex: 1;
+    min-width: 0;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12.5px;
+    background: var(--ground);
+  }
+
+  .invite-link-row button {
+    flex: 0 0 auto;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: none;
+    border-radius: 8px;
+    padding: 0 14px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .invite-copied {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+    min-height: 16px;
+    margin-bottom: 10px;
+  }
+
+  .invite-close {
+    width: 100%;
+    height: 38px;
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--ink-soft);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .invite-close:hover { color: var(--ink); }
+
+  .member-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 20px;
+    background: var(--accent-soft);
+    border-bottom: 1px solid var(--line);
+    font-size: 12.5px;
+  }
+
+  .member-strip .who {
+    color: var(--ink-soft);
+  }
+
+  .member-strip .who strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .member-strip button {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 2px 4px;
+    font-family: "Work Sans", system-ui, sans-serif;
+  }
+
+  .member-strip button:hover { text-decoration: underline; }
+
+  .totals-wrap {
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+  }
+
+  .totals-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 14px 20px 8px;
+  }
+
+  .totals-head .label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .grand-total {
+    font-family: "IBM Plex Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .totals-row {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 0 20px 16px;
+    scrollbar-width: thin;
+  }
+
+  .totals-row::-webkit-scrollbar { height: 6px; }
+  .totals-row::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+
+  .person-chip {
+    flex: 0 0 auto;
+    background: var(--accent-soft);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 8px 12px;
+    min-width: 108px;
+  }
+
+  .person-chip .name {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+  }
+
+  .person-chip .amount {
+    font-family: "IBM Plex Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-top: 2px;
+  }
+
+  .totals-empty {
+    padding: 0 20px 16px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+
+  .feed {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .empty-state {
+    margin: auto;
+    text-align: center;
+    max-width: 320px;
+    padding: 32px 16px;
+    color: var(--ink-soft);
+  }
+
+  .empty-state .glyph {
+    font-family: "Fraunces", serif;
+    font-size: 34px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .empty-state p { font-size: 13.5px; line-height: 1.5; margin: 4px 0 0; }
+
+  .msg {
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 11px 13px;
+    box-shadow: var(--shadow);
+    max-width: 92%;
+  }
+
+  .msg.mine {
+    align-self: flex-end;
+    border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+  }
+
+  .msg-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .msg-author {
+    font-weight: 600;
+    font-size: 13.5px;
+    color: var(--ink);
+  }
+
+  .msg-time {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10.5px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+
+  .msg-text {
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--ink);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .msg-amount {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-top: 7px;
+    background: var(--warm-soft);
+    color: var(--warm);
+    font-family: "IBM Plex Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    font-size: 13.5px;
+    padding: 3px 9px;
+    border-radius: 999px;
+  }
+
+  .composer {
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+    padding: 12px 20px calc(14px + env(safe-area-inset-bottom));
+  }
+
+  .composer-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .field label {
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-family: "IBM Plex Mono", monospace;
+  }
+
+  input, textarea {
+    font-family: "Work Sans", system-ui, sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 9px 10px;
+  }
+
+  input:focus, textarea:focus, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  #text-field { flex: 1; min-width: 0; }
+  #text-input { resize: none; height: 42px; font-family: "Work Sans", system-ui, sans-serif; }
+
+  #amount-field { width: 96px; }
+  #amount-input { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; }
+
+  .send-btn {
+    height: 42px;
+    padding: 0 18px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    flex: 0 0 auto;
+  }
+
+  .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .send-btn:not(:disabled):hover { filter: brightness(1.08); }
+
+  .status-line {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin-top: 7px;
+    min-height: 14px;
+  }
+
+  .gate {
+    position: fixed;
+    inset: 0;
+    background: color-mix(in srgb, var(--ink) 45%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 10;
+  }
+
+  .gate-card {
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 24px;
+    max-width: 340px;
+    width: 100%;
+    box-shadow: var(--shadow);
+  }
+
+  .gate-card h2 {
+    font-family: "Fraunces", serif;
+    font-size: 20px;
+    margin: 0 0 6px;
+  }
+
+  .gate-card p {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin: 0 0 16px;
+    line-height: 1.5;
+  }
+
+  .gate-card input {
+    width: 100%;
+    margin-bottom: 12px;
+  }
+
+  .gate-card button {
+    width: 100%;
+    height: 42px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .gate-card button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  [hidden] { display: none !important; }
+
+  @media (max-width: 460px) {
+    .app { border-inline: none; }
+    header { padding: 16px 16px 14px; }
+    .totals-head, .totals-row, .feed, .composer, .member-strip { padding-left: 16px; padding-right: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header>
+    <div class="header-top">
+      <div>
+        <div class="eyebrow">Kooxda &middot; Xisaab wadaag ah</div>
+        <h1 id="group-title">Xisaabta Kooxda</h1>
+      </div>
+      <button class="invite-btn" id="invite-btn" type="button">Casuun Xubno</button>
+    </div>
+    <div class="subhead">Fariimo iyo lacago dhammaan xubnuhu wada arkaan — mid kastaa si gooni ah ayaa loo xisaabinayaa.</div>
+  </header>
+
+  <div class="member-strip" id="member-strip" hidden>
+    <span class="who">Waxaad ku biirtay sida <strong id="member-name"></strong></span>
+    <button id="change-name-btn" type="button">Beddel magaca</button>
+  </div>
+
+  <div class="totals-wrap">
+    <div class="totals-head">
+      <span class="label">Wadarta Guud</span>
+      <span class="grand-total" id="grand-total">$0</span>
+    </div>
+    <div class="totals-row" id="totals-row"></div>
+    <div class="totals-empty" id="totals-empty">Weli lacag lama soo dhejin.</div>
+  </div>
+
+  <div class="feed" id="feed">
+    <div class="empty-state" id="empty-state">
+      <div class="glyph">&sect;</div>
+      <p>Weli fariin lama soo dhejin. Qor fariintaada koowaad hoos ka — lacag haddii aad rabtid ku dar, haddii kalese ka tag banaan.</p>
+    </div>
+  </div>
+
+  <div class="composer">
+    <div class="composer-row">
+      <div class="field" id="text-field">
+        <label for="text-input">Fariin</label>
+        <textarea id="text-input" placeholder="Qor fariintaada..." maxlength="600"></textarea>
+      </div>
+      <div class="field" id="amount-field">
+        <label for="amount-input">Lacag ($)</label>
+        <input id="amount-input" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00">
+      </div>
+      <button class="send-btn" id="send-btn">Dir</button>
+    </div>
+    <div class="status-line" id="status-line"></div>
+  </div>
+
+</div>
+
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <h2>Ku Biir Kooxda</h2>
+    <p>Geli magacaaga hal mar — kadib waa lagu aqoonsan doonaa aaladdan mar walba, mana u baahnid inaad soo qorto mar labaad.</p>
+    <input id="name-input" type="text" placeholder="Magacaaga (tusaale: Faarax)" maxlength="40">
+    <button id="name-submit" disabled>Ku Biir Kooxda</button>
+  </div>
+</div>
+
+<div class="invite-panel" id="invite-panel" hidden>
+  <div class="invite-card">
+    <h2>Casuun Xubno</h2>
+    <p>U dir link-kan xubnaha aad rabto inay ku biiraan kooxda. Qofna Claude account looma baahna.</p>
+    <div class="invite-link-row">
+      <input id="invite-link-input" type="text" readonly>
+      <button id="invite-copy-btn" type="button">Koobi</button>
+    </div>
+    <div class="invite-copied" id="invite-copied"></div>
+    <button class="invite-close" id="invite-close-btn" type="button">Xir</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script>
+(function () {
+  const firebaseConfig = {
+    apiKey: "AIzaSyCzXUKmUuNMKtUFjp1D649poJN3xuhjK5A",
+    authDomain: "xisaabta-kooxda.firebaseapp.com",
+    projectId: "xisaabta-kooxda",
+    storageBucket: "xisaabta-kooxda.firebasestorage.app",
+    messagingSenderId: "676825911875",
+    appId: "1:676825911875:web:0b94b0342fd0689a843af6"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const NAME_KEY = "xisaabta-kooxda-magac";
+  const feed = document.getElementById("feed");
+  const emptyState = document.getElementById("empty-state");
+  const totalsRow = document.getElementById("totals-row");
+  const totalsEmpty = document.getElementById("totals-empty");
+  const grandTotalEl = document.getElementById("grand-total");
+  const statusLine = document.getElementById("status-line");
+  const sendBtn = document.getElementById("send-btn");
+  const textInput = document.getElementById("text-input");
+  const amountInput = document.getElementById("amount-input");
+  const gate = document.getElementById("gate");
+  const nameInput = document.getElementById("name-input");
+  const nameSubmit = document.getElementById("name-submit");
+  const memberStrip = document.getElementById("member-strip");
+  const memberName = document.getElementById("member-name");
+  const changeNameBtn = document.getElementById("change-name-btn");
+  const inviteBtn = document.getElementById("invite-btn");
+  const invitePanel = document.getElementById("invite-panel");
+  const inviteLinkInput = document.getElementById("invite-link-input");
+  const inviteCopyBtn = document.getElementById("invite-copy-btn");
+  const inviteCopied = document.getElementById("invite-copied");
+  const inviteCloseBtn = document.getElementById("invite-close-btn");
+
+  let myName = null;
+  let messages = [];
+
+  function fmt(n) {
+    const v = Math.round(n * 100) / 100;
+    return "$" + v.toLocaleString(undefined, { minimumFractionDigits: v % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 });
+  }
+
+  function timeLabel(ts) {
+    const d = new Date(ts);
+    const now = new Date();
+    const sameDay = d.toDateString() === now.toDateString();
+    const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+    if (sameDay) return time;
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) + " · " + time;
+  }
+
+  function render() {
+    if (messages.length === 0) {
+      feed.innerHTML = "";
+      feed.appendChild(emptyState);
+      emptyState.hidden = false;
+    } else {
+      feed.innerHTML = "";
+      for (const m of messages) {
+        const el = document.createElement("div");
+        el.className = "msg" + (m.author === myName ? " mine" : "");
+        const top = document.createElement("div");
+        top.className = "msg-top";
+        const author = document.createElement("span");
+        author.className = "msg-author";
+        author.textContent = m.author;
+        const time = document.createElement("span");
+        time.className = "msg-time";
+        time.textContent = timeLabel(m.createdAt);
+        top.appendChild(author);
+        top.appendChild(time);
+        el.appendChild(top);
+        if (m.text) {
+          const text = document.createElement("div");
+          text.className = "msg-text";
+          text.textContent = m.text;
+          el.appendChild(text);
+        }
+        if (typeof m.amount === "number" && m.amount > 0) {
+          const amt = document.createElement("div");
+          amt.className = "msg-amount";
+          amt.textContent = fmt(m.amount);
+          el.appendChild(amt);
+        }
+        feed.appendChild(el);
+      }
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    const totals = new Map();
+    let grand = 0;
+    for (const m of messages) {
+      if (typeof m.amount === "number" && m.amount > 0) {
+        totals.set(m.author, (totals.get(m.author) || 0) + m.amount);
+        grand += m.amount;
+      }
+    }
+    grandTotalEl.textContent = fmt(grand);
+    const sorted = Array.from(totals.entries()).sort((a, b) => b[1] - a[1]);
+    if (sorted.length === 0) {
+      totalsRow.hidden = true;
+      totalsEmpty.hidden = false;
+    } else {
+      totalsRow.hidden = false;
+      totalsEmpty.hidden = true;
+      totalsRow.innerHTML = "";
+      for (const [name, sum] of sorted) {
+        const chip = document.createElement("div");
+        chip.className = "person-chip";
+        const n = document.createElement("div");
+        n.className = "name";
+        n.textContent = name;
+        const a = document.createElement("div");
+        a.className = "amount";
+        a.textContent = fmt(sum);
+        chip.appendChild(n);
+        chip.appendChild(a);
+        totalsRow.appendChild(chip);
+      }
+    }
+  }
+
+  db.collection("messages").orderBy("createdAt", "asc").limitToLast(500)
+    .onSnapshot(
+      (snap) => {
+        messages = snap.docs.map((d) => d.data());
+        render();
+      },
+      (err) => {
+        statusLine.textContent = "Khalad ayaa dhacay marka xogta la soo raadinayo.";
+        console.error(err);
+      }
+    );
+
+  async function send() {
+    const text = textInput.value.trim();
+    const amountRaw = amountInput.value.trim();
+    const amount = amountRaw ? parseFloat(amountRaw) : null;
+    if (!text && !amount) return;
+    sendBtn.disabled = true;
+    statusLine.textContent = "Dirayo...";
+    try {
+      await db.collection("messages").add({
+        author: myName,
+        text: text || null,
+        amount: amount && amount > 0 ? amount : null,
+        createdAt: Date.now(),
+      });
+      textInput.value = "";
+      amountInput.value = "";
+      statusLine.textContent = "";
+    } catch (e) {
+      statusLine.textContent = "Dirista way fashilantay, isku day mar kale.";
+      console.error(e);
+    }
+    sendBtn.disabled = false;
+    textInput.focus();
+  }
+
+  sendBtn.addEventListener("click", send);
+  textInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  });
+
+  function showMemberStrip() {
+    if (myName) {
+      memberName.textContent = myName;
+      memberStrip.hidden = false;
+    } else {
+      memberStrip.hidden = true;
+    }
+  }
+
+  function openGateIfNeeded() {
+    const saved = localStorage.getItem(NAME_KEY);
+    if (saved) {
+      myName = saved;
+      gate.hidden = true;
+      showMemberStrip();
+    } else {
+      gate.hidden = false;
+      nameInput.value = "";
+      nameSubmit.disabled = true;
+      nameInput.focus();
+    }
+  }
+
+  nameInput.addEventListener("input", () => {
+    nameSubmit.disabled = nameInput.value.trim().length === 0;
+  });
+  nameInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && nameInput.value.trim()) {
+      nameSubmit.click();
+    }
+  });
+  nameSubmit.addEventListener("click", () => {
+    const v = nameInput.value.trim();
+    if (!v) return;
+    localStorage.setItem(NAME_KEY, v);
+    myName = v;
+    gate.hidden = true;
+    showMemberStrip();
+    render();
+  });
+  changeNameBtn.addEventListener("click", () => {
+    localStorage.removeItem(NAME_KEY);
+    myName = null;
+    memberStrip.hidden = true;
+    openGateIfNeeded();
+  });
+
+  function openInvitePanel() {
+    inviteLinkInput.value = window.location.href;
+    inviteCopied.textContent = "";
+    invitePanel.hidden = false;
+  }
+
+  inviteBtn.addEventListener("click", openInvitePanel);
+  inviteCloseBtn.addEventListener("click", () => { invitePanel.hidden = true; });
+  inviteLinkInput.addEventListener("click", () => inviteLinkInput.select());
+
+  inviteCopyBtn.addEventListener("click", async () => {
+    const link = inviteLinkInput.value;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(link);
+      } else {
+        inviteLinkInput.select();
+        document.execCommand("copy");
+      }
+      inviteCopied.textContent = "La koobiyeeyay!";
+    } catch (e) {
+      inviteLinkInput.select();
+      inviteCopied.textContent = "Ku koobi gacanta (Ctrl+C).";
+    }
+  });
+
+  openGateIfNeeded();
+  render();
+})();
+</script>
+</body>
+</html>
