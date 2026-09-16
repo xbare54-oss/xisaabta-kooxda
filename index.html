@@ -279,6 +279,160 @@
 
   .member-strip button:hover { text-decoration: underline; }
 
+  .filters {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+  }
+
+  .filters .field {
+    min-width: 0;
+  }
+
+  .filters #filter-date { width: 148px; }
+  .filters #filter-name { width: 140px; }
+
+  select {
+    font-family: "Work Sans", system-ui, sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 9px 10px;
+  }
+
+  .filter-reset {
+    height: 36px;
+    padding: 0 12px;
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--ink-soft);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: "Work Sans", system-ui, sans-serif;
+  }
+
+  .filter-reset:hover { color: var(--ink); background: var(--accent-soft); }
+
+  .daily-btn {
+    height: 36px;
+    padding: 0 12px;
+    background: var(--accent-soft);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--accent);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: "Work Sans", system-ui, sans-serif;
+    margin-left: auto;
+  }
+
+  .daily-btn:hover { filter: brightness(1.05); }
+
+  .daily-panel {
+    position: fixed;
+    inset: 0;
+    background: color-mix(in srgb, var(--ink) 45%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 11;
+  }
+
+  .daily-card {
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 24px;
+    max-width: 420px;
+    width: 100%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow);
+  }
+
+  .daily-card h2 {
+    font-family: "Fraunces", serif;
+    font-size: 20px;
+    margin: 0 0 4px;
+  }
+
+  .daily-card > p {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0 0 14px;
+  }
+
+  .daily-list {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .daily-day {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: var(--ground);
+  }
+
+  .daily-day-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .daily-day-date {
+    font-family: "Fraunces", serif;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .daily-day-total {
+    font-family: "IBM Plex Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--accent);
+  }
+
+  .daily-person-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 3px 0;
+  }
+
+  .daily-person-row .amount {
+    font-family: "IBM Plex Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: var(--warm);
+  }
+
+  .daily-empty {
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 13px;
+    font-style: italic;
+    padding: 24px 0;
+  }
+
   .totals-wrap {
     border-bottom: 1px solid var(--line);
     background: var(--surface);
@@ -565,7 +719,7 @@
   @media (max-width: 460px) {
     .app { border-inline: none; }
     header { padding: 16px 16px 14px; }
-    .totals-head, .totals-row, .feed, .composer, .member-strip { padding-left: 16px; padding-right: 16px; }
+    .totals-head, .totals-row, .feed, .composer, .member-strip, .filters { padding-left: 16px; padding-right: 16px; }
   }
 </style>
 </head>
@@ -592,9 +746,24 @@
     <button id="change-name-btn" type="button">Beddel magaca</button>
   </div>
 
+  <div class="filters">
+    <div class="field">
+      <label for="filter-date">Taariikh</label>
+      <input id="filter-date" type="date">
+    </div>
+    <div class="field">
+      <label for="filter-name">Xubin</label>
+      <select id="filter-name">
+        <option value="">Dhammaan</option>
+      </select>
+    </div>
+    <button class="filter-reset" id="filter-reset" type="button">Reset</button>
+    <button class="daily-btn" id="daily-btn" type="button">Xisaab Maalinle</button>
+  </div>
+
   <div class="totals-wrap">
     <div class="totals-head">
-      <span class="label">Wadarta Guud</span>
+      <span class="label" id="totals-label">Wadarta Guud</span>
       <span class="grand-total" id="grand-total">$0</span>
     </div>
     <div class="totals-row" id="totals-row"></div>
@@ -647,6 +816,15 @@
   </div>
 </div>
 
+<div class="daily-panel" id="daily-panel" hidden>
+  <div class="daily-card">
+    <h2>Xisaabta Maalinlaha ah</h2>
+    <p>Wadarta qof kasta, maalin kasta oo lacag la soo dhejiyay.</p>
+    <div class="daily-list" id="daily-list"></div>
+    <button class="invite-close" id="daily-close-btn" type="button">Xir</button>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script>
@@ -685,6 +863,14 @@
   const inviteCopied = document.getElementById("invite-copied");
   const inviteCloseBtn = document.getElementById("invite-close-btn");
   const installBtn = document.getElementById("install-btn");
+  const filterDate = document.getElementById("filter-date");
+  const filterName = document.getElementById("filter-name");
+  const filterReset = document.getElementById("filter-reset");
+  const totalsLabel = document.getElementById("totals-label");
+  const dailyBtn = document.getElementById("daily-btn");
+  const dailyPanel = document.getElementById("daily-panel");
+  const dailyList = document.getElementById("daily-list");
+  const dailyCloseBtn = document.getElementById("daily-close-btn");
 
   let myName = null;
   let deferredInstallPrompt = null;
@@ -729,14 +915,61 @@
     return d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) + " · " + time;
   }
 
+  function dayKey(ts) {
+    const d = new Date(ts);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + day;
+  }
+
+  function dayLabel(key) {
+    const [y, m, d] = key.split("-").map(Number);
+    const date = new Date(y, m - 1, d);
+    return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+  }
+
+  function populateNameFilter() {
+    const authors = Array.from(new Set(messages.map((m) => m.author))).sort((a, b) => a.localeCompare(b));
+    const current = filterName.value;
+    filterName.innerHTML = '<option value="">Dhammaan</option>';
+    for (const a of authors) {
+      const opt = document.createElement("option");
+      opt.value = a;
+      opt.textContent = a;
+      filterName.appendChild(opt);
+    }
+    if (authors.includes(current)) filterName.value = current;
+  }
+
+  function getFilteredMessages() {
+    const date = filterDate.value;
+    const name = filterName.value;
+    return messages.filter((m) => {
+      if (date && dayKey(m.createdAt) !== date) return false;
+      if (name && m.author !== name) return false;
+      return true;
+    });
+  }
+
   function render() {
-    if (messages.length === 0) {
+    populateNameFilter();
+    const filtered = getFilteredMessages();
+    const hasFilter = !!(filterDate.value || filterName.value);
+    totalsLabel.textContent = hasFilter ? "Wadarta La Shaandheeyay" : "Wadarta Guud";
+
+    if (filtered.length === 0) {
       feed.innerHTML = "";
       feed.appendChild(emptyState);
       emptyState.hidden = false;
+      if (hasFilter) {
+        emptyState.querySelector("p").textContent = "Ma jiraan fariimo u dhigma shaandhaynta aad dooratay.";
+      } else {
+        emptyState.querySelector("p").textContent = "Weli fariin lama soo dhejin. Qor fariintaada koowaad hoos ka — lacag haddii aad rabtid ku dar, haddii kalese ka tag banaan.";
+      }
     } else {
       feed.innerHTML = "";
-      for (const m of messages) {
+      for (const m of filtered) {
         const el = document.createElement("div");
         el.className = "msg" + (m.author === myName ? " mine" : "");
         const top = document.createElement("div");
@@ -769,7 +1002,7 @@
 
     const totals = new Map();
     let grand = 0;
-    for (const m of messages) {
+    for (const m of filtered) {
       if (typeof m.amount === "number" && m.amount > 0) {
         totals.set(m.author, (totals.get(m.author) || 0) + m.amount);
         grand += m.amount;
@@ -799,6 +1032,73 @@
       }
     }
   }
+
+  filterDate.addEventListener("change", render);
+  filterName.addEventListener("change", render);
+  filterReset.addEventListener("click", () => {
+    filterDate.value = "";
+    filterName.value = "";
+    render();
+  });
+
+  function renderDailyPanel() {
+    const name = filterName.value;
+    const source = name ? messages.filter((m) => m.author === name) : messages;
+    const byDay = new Map();
+    for (const m of source) {
+      if (typeof m.amount !== "number" || m.amount <= 0) continue;
+      const key = dayKey(m.createdAt);
+      if (!byDay.has(key)) byDay.set(key, new Map());
+      const perPerson = byDay.get(key);
+      perPerson.set(m.author, (perPerson.get(m.author) || 0) + m.amount);
+    }
+    const days = Array.from(byDay.keys()).sort((a, b) => b.localeCompare(a));
+    dailyList.innerHTML = "";
+    if (days.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "daily-empty";
+      empty.textContent = "Weli lacag lama soo dhejin.";
+      dailyList.appendChild(empty);
+      return;
+    }
+    for (const key of days) {
+      const perPerson = byDay.get(key);
+      const dayTotal = Array.from(perPerson.values()).reduce((s, v) => s + v, 0);
+      const dayEl = document.createElement("div");
+      dayEl.className = "daily-day";
+      const head = document.createElement("div");
+      head.className = "daily-day-head";
+      const dateEl = document.createElement("span");
+      dateEl.className = "daily-day-date";
+      dateEl.textContent = dayLabel(key);
+      const totalEl = document.createElement("span");
+      totalEl.className = "daily-day-total";
+      totalEl.textContent = fmt(dayTotal);
+      head.appendChild(dateEl);
+      head.appendChild(totalEl);
+      dayEl.appendChild(head);
+      const sortedPeople = Array.from(perPerson.entries()).sort((a, b) => b[1] - a[1]);
+      for (const [person, sum] of sortedPeople) {
+        const row = document.createElement("div");
+        row.className = "daily-person-row";
+        const pName = document.createElement("span");
+        pName.textContent = person;
+        const pAmt = document.createElement("span");
+        pAmt.className = "amount";
+        pAmt.textContent = fmt(sum);
+        row.appendChild(pName);
+        row.appendChild(pAmt);
+        dayEl.appendChild(row);
+      }
+      dailyList.appendChild(dayEl);
+    }
+  }
+
+  dailyBtn.addEventListener("click", () => {
+    renderDailyPanel();
+    dailyPanel.hidden = false;
+  });
+  dailyCloseBtn.addEventListener("click", () => { dailyPanel.hidden = true; });
 
   db.collection("messages").orderBy("createdAt", "asc").limitToLast(500)
     .onSnapshot(
