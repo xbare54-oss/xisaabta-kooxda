@@ -555,6 +555,26 @@
     margin-bottom: 4px;
   }
 
+  .msg-top-right {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .msg-delete {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0 2px;
+    line-height: 1;
+    font-family: "Work Sans", system-ui, sans-serif;
+  }
+
+  .msg-delete:hover { color: var(--warm); }
+
   .msg-author {
     font-weight: 600;
     font-size: 13.5px;
@@ -977,11 +997,23 @@
         const author = document.createElement("span");
         author.className = "msg-author";
         author.textContent = m.author;
+        const right = document.createElement("span");
+        right.className = "msg-top-right";
         const time = document.createElement("span");
         time.className = "msg-time";
         time.textContent = timeLabel(m.createdAt);
+        right.appendChild(time);
+        if (m.author === myName && m.id) {
+          const del = document.createElement("button");
+          del.className = "msg-delete";
+          del.type = "button";
+          del.title = "Tirtir fariintan";
+          del.textContent = "✕";
+          del.addEventListener("click", () => deleteMessage(m.id));
+          right.appendChild(del);
+        }
         top.appendChild(author);
-        top.appendChild(time);
+        top.appendChild(right);
         el.appendChild(top);
         if (m.text) {
           const text = document.createElement("div");
@@ -1103,7 +1135,7 @@
   db.collection("messages").orderBy("createdAt", "asc").limitToLast(500)
     .onSnapshot(
       (snap) => {
-        messages = snap.docs.map((d) => d.data());
+        messages = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
         render();
       },
       (err) => {
@@ -1135,6 +1167,16 @@
     }
     sendBtn.disabled = false;
     textInput.focus();
+  }
+
+  async function deleteMessage(id) {
+    if (!confirm("Ma hubtaa inaad tirtirto fariintan?")) return;
+    try {
+      await db.collection("messages").doc(id).delete();
+    } catch (e) {
+      statusLine.textContent = "Tirtiridda way fashilantay, isku day mar kale.";
+      console.error(e);
+    }
   }
 
   sendBtn.addEventListener("click", send);
