@@ -461,6 +461,42 @@
     color: var(--accent);
   }
 
+  .summary-tiles {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 0 20px 14px;
+  }
+
+  .stat-tile {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 9px 11px;
+    background: var(--surface-raised);
+  }
+
+  .stat-tile .label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .stat-tile .value {
+    font-family: "IBM Plex Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    font-size: 15px;
+    margin-top: 3px;
+    overflow-wrap: anywhere;
+  }
+
+  .stat-tile.income .value { color: var(--accent); }
+  .stat-tile.outcome .value { color: var(--warm); }
+  .stat-tile.balance.positive .value { color: var(--accent); }
+  .stat-tile.balance.negative .value { color: var(--warm); }
+
   .totals-row {
     display: flex;
     gap: 10px;
@@ -496,9 +532,11 @@
     font-variant-numeric: tabular-nums;
     font-size: 15px;
     font-weight: 600;
-    color: var(--accent);
     margin-top: 2px;
   }
+
+  .person-chip .amount.positive { color: var(--accent); }
+  .person-chip .amount.negative { color: var(--warm); }
 
   .totals-empty {
     padding: 0 20px 16px;
@@ -601,8 +639,6 @@
     align-items: baseline;
     gap: 4px;
     margin-top: 7px;
-    background: var(--warm-soft);
-    color: var(--warm);
     font-family: "IBM Plex Mono", monospace;
     font-variant-numeric: tabular-nums;
     font-weight: 600;
@@ -611,10 +647,44 @@
     border-radius: 999px;
   }
 
+  .msg-amount.income { background: var(--accent-soft); color: var(--accent); }
+  .msg-amount.outcome { background: var(--warm-soft); color: var(--warm); }
+
   .composer {
     border-top: 1px solid var(--line);
     background: var(--surface);
     padding: 12px 20px calc(14px + env(safe-area-inset-bottom));
+  }
+
+  .type-toggle {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .type-btn {
+    flex: 1;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface-raised);
+    color: var(--ink-soft);
+    font-family: "Work Sans", system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .type-btn.active[data-type="income"] {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .type-btn.active[data-type="outcome"] {
+    background: var(--warm-soft);
+    border-color: var(--warm);
+    color: var(--warm);
   }
 
   .composer-row {
@@ -760,7 +830,7 @@
   @media (max-width: 460px) {
     .app { border-inline: none; }
     header { padding: 16px 16px 14px; }
-    .totals-head, .totals-row, .feed, .composer, .member-strip, .filters { padding-left: 16px; padding-right: 16px; }
+    .totals-head, .summary-tiles, .totals-row, .feed, .composer, .member-strip, .filters { padding-left: 16px; padding-right: 16px; }
   }
 </style>
 </head>
@@ -804,8 +874,21 @@
 
   <div class="totals-wrap">
     <div class="totals-head">
-      <span class="label" id="totals-label">Grand Total</span>
-      <span class="grand-total" id="grand-total">$0</span>
+      <span class="label" id="totals-label">Totals</span>
+    </div>
+    <div class="summary-tiles">
+      <div class="stat-tile income">
+        <div class="label">Income</div>
+        <div class="value" id="total-income">$0</div>
+      </div>
+      <div class="stat-tile outcome">
+        <div class="label">Outcome</div>
+        <div class="value" id="total-outcome">$0</div>
+      </div>
+      <div class="stat-tile balance" id="balance-tile">
+        <div class="label">Balance</div>
+        <div class="value" id="total-balance">$0</div>
+      </div>
     </div>
     <div class="totals-row" id="totals-row"></div>
     <div class="totals-empty" id="totals-empty">No contributions posted yet.</div>
@@ -819,6 +902,10 @@
   </div>
 
   <div class="composer">
+    <div class="type-toggle">
+      <button class="type-btn active" id="type-income-btn" type="button" data-type="income">+ Income</button>
+      <button class="type-btn" id="type-outcome-btn" type="button" data-type="outcome">&minus; Outcome</button>
+    </div>
     <div class="composer-row">
       <div class="field" id="text-field">
         <label for="text-input">Message</label>
@@ -895,7 +982,12 @@
   const emptyState = document.getElementById("empty-state");
   const totalsRow = document.getElementById("totals-row");
   const totalsEmpty = document.getElementById("totals-empty");
-  const grandTotalEl = document.getElementById("grand-total");
+  const totalIncomeEl = document.getElementById("total-income");
+  const totalOutcomeEl = document.getElementById("total-outcome");
+  const totalBalanceEl = document.getElementById("total-balance");
+  const balanceTile = document.getElementById("balance-tile");
+  const typeIncomeBtn = document.getElementById("type-income-btn");
+  const typeOutcomeBtn = document.getElementById("type-outcome-btn");
   const statusLine = document.getElementById("status-line");
   const sendBtn = document.getElementById("send-btn");
   const textInput = document.getElementById("text-input");
@@ -951,11 +1043,21 @@
     deferredInstallPrompt = null;
   });
   let messages = [];
+  let currentType = "income";
 
   function fmt(n) {
-    const v = Math.round(n * 100) / 100;
+    const v = Math.round(Math.abs(n) * 100) / 100;
     return "$" + v.toLocaleString(undefined, { minimumFractionDigits: v % 1 === 0 ? 0 : 2, maximumFractionDigits: 2 });
   }
+
+  function setType(type) {
+    currentType = type;
+    typeIncomeBtn.classList.toggle("active", type === "income");
+    typeOutcomeBtn.classList.toggle("active", type === "outcome");
+  }
+
+  typeIncomeBtn.addEventListener("click", () => setType("income"));
+  typeOutcomeBtn.addEventListener("click", () => setType("outcome"));
 
   function timeLabel(ts) {
     const d = new Date(ts);
@@ -1007,7 +1109,7 @@
     populateNameFilter();
     const filtered = getFilteredMessages();
     const hasFilter = !!(filterDate.value || filterName.value);
-    totalsLabel.textContent = hasFilter ? "Filtered Total" : "Grand Total";
+    totalsLabel.textContent = hasFilter ? "Filtered Totals" : "Totals";
 
     if (filtered.length === 0) {
       feed.innerHTML = "";
@@ -1054,8 +1156,9 @@
         }
         if (typeof m.amount === "number" && m.amount > 0) {
           const amt = document.createElement("div");
-          amt.className = "msg-amount";
-          amt.textContent = fmt(m.amount);
+          const mType = m.type === "outcome" ? "outcome" : "income";
+          amt.className = "msg-amount " + mType;
+          amt.textContent = (mType === "income" ? "+" : "−") + fmt(m.amount);
           el.appendChild(amt);
         }
         feed.appendChild(el);
@@ -1063,16 +1166,26 @@
       feed.scrollTop = feed.scrollHeight;
     }
 
-    const totals = new Map();
-    let grand = 0;
+    let totalIncome = 0;
+    let totalOutcome = 0;
+    const nets = new Map();
     for (const m of filtered) {
       if (typeof m.amount === "number" && m.amount > 0) {
-        totals.set(m.author, (totals.get(m.author) || 0) + m.amount);
-        grand += m.amount;
+        const isOutcome = m.type === "outcome";
+        if (isOutcome) totalOutcome += m.amount;
+        else totalIncome += m.amount;
+        const delta = isOutcome ? -m.amount : m.amount;
+        nets.set(m.author, (nets.get(m.author) || 0) + delta);
       }
     }
-    grandTotalEl.textContent = fmt(grand);
-    const sorted = Array.from(totals.entries()).sort((a, b) => b[1] - a[1]);
+    const balance = totalIncome - totalOutcome;
+    totalIncomeEl.textContent = fmt(totalIncome);
+    totalOutcomeEl.textContent = fmt(totalOutcome);
+    totalBalanceEl.textContent = (balance < 0 ? "-" : "") + fmt(balance);
+    balanceTile.classList.toggle("positive", balance >= 0);
+    balanceTile.classList.toggle("negative", balance < 0);
+
+    const sorted = Array.from(nets.entries()).sort((a, b) => b[1] - a[1]);
     if (sorted.length === 0) {
       totalsRow.hidden = true;
       totalsEmpty.hidden = false;
@@ -1087,8 +1200,8 @@
         n.className = "name";
         n.textContent = name;
         const a = document.createElement("div");
-        a.className = "amount";
-        a.textContent = fmt(sum);
+        a.className = "amount " + (sum < 0 ? "negative" : "positive");
+        a.textContent = (sum < 0 ? "-" : "") + fmt(sum);
         chip.appendChild(n);
         chip.appendChild(a);
         totalsRow.appendChild(chip);
@@ -1113,7 +1226,8 @@
       const key = dayKey(m.createdAt);
       if (!byDay.has(key)) byDay.set(key, new Map());
       const perPerson = byDay.get(key);
-      perPerson.set(m.author, (perPerson.get(m.author) || 0) + m.amount);
+      const delta = m.type === "outcome" ? -m.amount : m.amount;
+      perPerson.set(m.author, (perPerson.get(m.author) || 0) + delta);
     }
     const days = Array.from(byDay.keys()).sort((a, b) => b.localeCompare(a));
     dailyList.innerHTML = "";
@@ -1136,7 +1250,7 @@
       dateEl.textContent = dayLabel(key);
       const totalEl = document.createElement("span");
       totalEl.className = "daily-day-total";
-      totalEl.textContent = fmt(dayTotal);
+      totalEl.textContent = (dayTotal < 0 ? "-" : "") + fmt(dayTotal);
       head.appendChild(dateEl);
       head.appendChild(totalEl);
       dayEl.appendChild(head);
@@ -1148,7 +1262,7 @@
         pName.textContent = person;
         const pAmt = document.createElement("span");
         pAmt.className = "amount";
-        pAmt.textContent = fmt(sum);
+        pAmt.textContent = (sum < 0 ? "-" : "") + fmt(sum);
         row.appendChild(pName);
         row.appendChild(pAmt);
         dayEl.appendChild(row);
@@ -1195,6 +1309,7 @@
         author: myName,
         text: text || null,
         amount: amount && amount > 0 ? amount : null,
+        type: currentType,
         createdAt: Date.now(),
         ownerUid: uid,
       });
