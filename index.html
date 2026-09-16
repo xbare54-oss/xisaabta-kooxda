@@ -847,6 +847,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script>
 (function () {
   const firebaseConfig = {
@@ -859,6 +860,13 @@
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+  const auth = firebase.auth();
+  let myUid = null;
+  const authReady = auth.signInAnonymously().catch((e) => console.error("Anonymous sign-in failed", e));
+  auth.onAuthStateChanged((user) => {
+    myUid = user ? user.uid : null;
+    render();
+  });
 
   const NAME_KEY = "xisaabta-kooxda-magac";
   const feed = document.getElementById("feed");
@@ -1003,7 +1011,7 @@
         time.className = "msg-time";
         time.textContent = timeLabel(m.createdAt);
         right.appendChild(time);
-        if (m.author === myName && m.id) {
+        if (m.ownerUid && myUid && m.ownerUid === myUid && m.id) {
           const del = document.createElement("button");
           del.className = "msg-delete";
           del.type = "button";
@@ -1152,11 +1160,15 @@
     sendBtn.disabled = true;
     statusLine.textContent = "Dirayo...";
     try {
+      const cred = await authReady;
+      const uid = (cred && cred.user && cred.user.uid) || myUid || (auth.currentUser && auth.currentUser.uid);
+      if (!uid) throw new Error("no uid");
       await db.collection("messages").add({
         author: myName,
         text: text || null,
         amount: amount && amount > 0 ? amount : null,
         createdAt: Date.now(),
+        ownerUid: uid,
       });
       textInput.value = "";
       amountInput.value = "";
