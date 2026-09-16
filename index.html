@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Xisaabta Kooxda</title>
+<meta name="description" content="Xisaab wadaag ah oo kooxdu ku wadaagto fariimo iyo lacago.">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1E6E52">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Xisaabta">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -136,6 +145,25 @@
   }
 
   .invite-btn:hover { filter: brightness(1.08); }
+
+  .install-btn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-family: "Work Sans", system-ui, sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 2px;
+  }
+
+  .install-btn:hover { background: var(--accent-soft); }
 
   .invite-panel {
     position: fixed;
@@ -551,7 +579,10 @@
         <div class="eyebrow">Kooxda &middot; Xisaab wadaag ah</div>
         <h1 id="group-title">Xisaabta Kooxda</h1>
       </div>
-      <button class="invite-btn" id="invite-btn" type="button">Casuun Xubno</button>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+        <button class="install-btn" id="install-btn" type="button" hidden>Rakib App-ka</button>
+        <button class="invite-btn" id="invite-btn" type="button">Casuun Xubno</button>
+      </div>
     </div>
     <div class="subhead">Fariimo iyo lacago dhammaan xubnuhu wada arkaan — mid kastaa si gooni ah ayaa loo xisaabinayaa.</div>
   </header>
@@ -653,8 +684,35 @@
   const inviteCopyBtn = document.getElementById("invite-copy-btn");
   const inviteCopied = document.getElementById("invite-copied");
   const inviteCloseBtn = document.getElementById("invite-close-btn");
+  const installBtn = document.getElementById("install-btn");
 
   let myName = null;
+  let deferredInstallPrompt = null;
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    });
+  }
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    installBtn.hidden = false;
+  });
+
+  installBtn.addEventListener("click", async () => {
+    if (!deferredInstallPrompt) return;
+    installBtn.hidden = true;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+  });
+
+  window.addEventListener("appinstalled", () => {
+    installBtn.hidden = true;
+    deferredInstallPrompt = null;
+  });
   let messages = [];
 
   function fmt(n) {
