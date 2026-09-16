@@ -1,4 +1,4 @@
-const CACHE_NAME = "xisaabta-kooxda-v1";
+const CACHE_NAME = "xisaabta-kooxda-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -27,23 +27,20 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
 
-  // Network-first for Firestore/Google APIs and the app shell HTML so data stays live;
-  // cache-first for static shell assets so the app still opens offline.
+  // Network-first for same-origin app shell files, so viewers always get the latest
+  // HTML/JS/manifest when online; falls back to the cached copy only when offline.
   const url = new URL(req.url);
   const isAppShell = url.origin === self.location.origin;
 
   if (isAppShell) {
     event.respondWith(
-      caches.match(req).then((cached) => {
-        const network = fetch(req)
-          .then((res) => {
-            const copy = res.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
-            return res;
-          })
-          .catch(() => cached);
-        return cached || network;
-      })
+      fetch(req)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+          return res;
+        })
+        .catch(() => caches.match(req))
     );
   }
 });
