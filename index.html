@@ -693,6 +693,7 @@
   }
 
   .gate-card {
+    position: relative;
     background: var(--surface-raised);
     border: 1px solid var(--line);
     border-radius: 14px;
@@ -701,6 +702,26 @@
     width: 100%;
     box-shadow: var(--shadow);
   }
+
+  .gate-cancel {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    border-radius: 999px;
+    color: var(--ink-soft);
+    font-size: 16px;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .gate-cancel:hover { background: var(--accent-soft); color: var(--ink); }
 
   .gate-card h2 {
     font-family: "Fraunces", serif;
@@ -816,6 +837,7 @@
 
 <div class="gate" id="gate">
   <div class="gate-card">
+    <button class="gate-cancel" id="gate-cancel-btn" type="button" title="Xir" aria-label="Xir">✕</button>
     <h2>Ku Biir Kooxda</h2>
     <p>Geli magacaaga hal mar — kadib waa lagu aqoonsan doonaa aaladdan mar walba, mana u baahnid inaad soo qorto mar labaad.</p>
     <input id="name-input" type="text" placeholder="Magacaaga (tusaale: Faarax)" maxlength="40">
@@ -881,6 +903,7 @@
   const gate = document.getElementById("gate");
   const nameInput = document.getElementById("name-input");
   const nameSubmit = document.getElementById("name-submit");
+  const gateCancelBtn = document.getElementById("gate-cancel-btn");
   const memberStrip = document.getElementById("member-strip");
   const memberName = document.getElementById("member-name");
   const changeNameBtn = document.getElementById("change-name-btn");
@@ -1157,6 +1180,11 @@
     const amountRaw = amountInput.value.trim();
     const amount = amountRaw ? parseFloat(amountRaw) : null;
     if (!text && !amount) return;
+    if (!myName) {
+      gate.hidden = false;
+      nameInput.focus();
+      return;
+    }
     sendBtn.disabled = true;
     statusLine.textContent = "Dirayo...";
     try {
@@ -1238,6 +1266,9 @@
     gate.hidden = true;
     showMemberStrip();
     render();
+  });
+  gateCancelBtn.addEventListener("click", () => {
+    gate.hidden = true;
   });
   changeNameBtn.addEventListener("click", () => {
     localStorage.removeItem(NAME_KEY);
