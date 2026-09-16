@@ -463,7 +463,7 @@
 
   .summary-tiles {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     gap: 10px;
     padding: 0 20px 14px;
   }
@@ -881,7 +881,7 @@
         <div class="label">Income</div>
         <div class="value" id="total-income">$0</div>
       </div>
-      <div class="stat-tile outcome">
+      <div class="stat-tile outcome" id="outcome-tile">
         <div class="label">Outcome</div>
         <div class="value" id="total-outcome">$0</div>
       </div>
@@ -984,6 +984,7 @@
   const totalsEmpty = document.getElementById("totals-empty");
   const totalIncomeEl = document.getElementById("total-income");
   const totalOutcomeEl = document.getElementById("total-outcome");
+  const outcomeTile = document.getElementById("outcome-tile");
   const totalBalanceEl = document.getElementById("total-balance");
   const balanceTile = document.getElementById("balance-tile");
   const typeIncomeBtn = document.getElementById("type-income-btn");
@@ -1105,9 +1106,22 @@
     });
   }
 
+  const OUTCOME_VIEWER = "abdalla";
+
+  function canSeeOutcome() {
+    return !!myName && myName.trim().toLowerCase() === OUTCOME_VIEWER;
+  }
+
   function render() {
     populateNameFilter();
-    const filtered = getFilteredMessages();
+    const canOutcome = canSeeOutcome();
+    typeOutcomeBtn.hidden = !canOutcome;
+    if (!canOutcome && currentType === "outcome") setType("income");
+    outcomeTile.hidden = !canOutcome;
+    balanceTile.hidden = !canOutcome;
+
+    const baseFiltered = getFilteredMessages();
+    const filtered = canOutcome ? baseFiltered : baseFiltered.filter((m) => m.type !== "outcome");
     const hasFilter = !!(filterDate.value || filterName.value);
     totalsLabel.textContent = hasFilter ? "Filtered Totals" : "Totals";
 
@@ -1219,7 +1233,8 @@
 
   function renderDailyPanel() {
     const name = filterName.value;
-    const source = name ? messages.filter((m) => m.author === name) : messages;
+    let source = name ? messages.filter((m) => m.author === name) : messages;
+    if (!canSeeOutcome()) source = source.filter((m) => m.type !== "outcome");
     const byDay = new Map();
     for (const m of source) {
       if (typeof m.amount !== "number" || m.amount <= 0) continue;
