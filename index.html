@@ -1122,8 +1122,11 @@
     outcomeTile.hidden = false;
     balanceTile.hidden = false;
 
+    // Everyone sees the total outcome / real balance NUMBERS, but only
+    // Abdalla sees the individual outcome entries (feed, per-person totals,
+    // daily breakdown) that make those numbers up.
     const baseFiltered = getFilteredMessages();
-    const filtered = baseFiltered;
+    const filtered = canPost ? baseFiltered : baseFiltered.filter((m) => m.type !== "outcome");
     const hasFilter = !!(filterDate.value || filterName.value);
     totalsLabel.textContent = hasFilter ? "Filtered Totals" : "Totals";
 
@@ -1182,22 +1185,32 @@
       feed.scrollTop = feed.scrollHeight;
     }
 
+    // Headline totals (income/outcome/balance tiles) are always computed
+    // from the FULL set, including outcome entries — everyone gets the
+    // real numbers. Only the per-person breakdown below respects the
+    // outcome-visibility restriction, since it's effectively a transaction
+    // list broken out by person.
     let totalIncome = 0;
     let totalOutcome = 0;
-    const nets = new Map();
-    for (const m of filtered) {
+    for (const m of baseFiltered) {
       if (typeof m.amount === "number" && m.amount > 0) {
-        const isOutcome = m.type === "outcome";
-        if (isOutcome) totalOutcome += m.amount;
+        if (m.type === "outcome") totalOutcome += m.amount;
         else totalIncome += m.amount;
-        const delta = isOutcome ? -m.amount : m.amount;
-        nets.set(m.author, (nets.get(m.author) || 0) + delta);
       }
     }
     const balance = totalIncome - totalOutcome;
     totalIncomeEl.textContent = fmt(totalIncome);
     totalOutcomeEl.textContent = fmt(totalOutcome);
     totalBalanceEl.textContent = (balance < 0 ? "-" : "") + fmt(balance);
+
+    const nets = new Map();
+    for (const m of filtered) {
+      if (typeof m.amount === "number" && m.amount > 0) {
+        const isOutcome = m.type === "outcome";
+        const delta = isOutcome ? -m.amount : m.amount;
+        nets.set(m.author, (nets.get(m.author) || 0) + delta);
+      }
+    }
     balanceTile.classList.toggle("positive", balance >= 0);
     balanceTile.classList.toggle("negative", balance < 0);
 
@@ -1236,6 +1249,7 @@
   function renderDailyPanel() {
     const name = filterName.value;
     let source = name ? messages.filter((m) => m.author === name) : messages;
+    if (!canPostOutcome()) source = source.filter((m) => m.type !== "outcome");
     const byDay = new Map();
     for (const m of source) {
       if (typeof m.amount !== "number" || m.amount <= 0) continue;
