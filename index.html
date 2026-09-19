@@ -1108,20 +1108,22 @@
 
   const OUTCOME_VIEWER = "abdalla";
 
-  function canSeeOutcome() {
+  // Only Abdalla can record ("post") an outcome entry — everyone can now
+  // see the real balance and total outcome, they just can't add new ones.
+  function canPostOutcome() {
     return !!myName && myName.trim().toLowerCase() === OUTCOME_VIEWER;
   }
 
   function render() {
     populateNameFilter();
-    const canOutcome = canSeeOutcome();
-    typeOutcomeBtn.hidden = !canOutcome;
-    if (!canOutcome && currentType === "outcome") setType("income");
-    outcomeTile.hidden = !canOutcome;
-    balanceTile.hidden = !canOutcome;
+    const canPost = canPostOutcome();
+    typeOutcomeBtn.hidden = !canPost;
+    if (!canPost && currentType === "outcome") setType("income");
+    outcomeTile.hidden = false;
+    balanceTile.hidden = false;
 
     const baseFiltered = getFilteredMessages();
-    const filtered = canOutcome ? baseFiltered : baseFiltered.filter((m) => m.type !== "outcome");
+    const filtered = baseFiltered;
     const hasFilter = !!(filterDate.value || filterName.value);
     totalsLabel.textContent = hasFilter ? "Filtered Totals" : "Totals";
 
@@ -1234,7 +1236,6 @@
   function renderDailyPanel() {
     const name = filterName.value;
     let source = name ? messages.filter((m) => m.author === name) : messages;
-    if (!canSeeOutcome()) source = source.filter((m) => m.type !== "outcome");
     const byDay = new Map();
     for (const m of source) {
       if (typeof m.amount !== "number" || m.amount <= 0) continue;
