@@ -1244,6 +1244,10 @@
     return monthKey(Date.now());
   }
 
+  function currentDayKey() {
+    return dayKey(Date.now());
+  }
+
   function monthLabel(key) {
     const [y, m] = key.split("-").map(Number);
     return new Date(y, m - 1, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
@@ -1326,7 +1330,7 @@
     // daily breakdown) that make those numbers up.
     const baseFiltered = getFilteredMessages();
     const filtered = canPost ? baseFiltered : baseFiltered.filter((m) => m.type !== "outcome");
-    const hasFilter = !!(filterDate.value || filterName.value || filterMonth.value !== currentMonthKey());
+    const hasFilter = !!(filterDate.value !== currentDayKey() || filterName.value || filterMonth.value !== currentMonthKey());
     totalsLabel.textContent = hasFilter ? "Filtered Totals" : "Totals";
 
     if (filtered.length === 0) {
@@ -1442,7 +1446,7 @@
   filterName.addEventListener("change", render);
   filterReset.addEventListener("click", () => {
     filterMonth.value = currentMonthKey();
-    filterDate.value = "";
+    filterDate.value = currentDayKey();
     filterName.value = "";
     render();
   });
@@ -1662,6 +1666,7 @@
     }
   });
 
+  filterDate.value = currentDayKey();
   openGateIfNeeded();
   render();
 })();
