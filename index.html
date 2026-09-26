@@ -293,6 +293,7 @@
     min-width: 0;
   }
 
+  .filters #filter-month { width: 132px; }
   .filters #filter-date { width: 148px; }
   .filters #filter-name { width: 140px; }
 
@@ -859,6 +860,10 @@
 
   <div class="filters">
     <div class="field">
+      <label for="filter-month">Month</label>
+      <select id="filter-month"></select>
+    </div>
+    <div class="field">
       <label for="filter-date">Date</label>
       <input id="filter-date" type="date">
     </div>
@@ -1007,6 +1012,7 @@
   const inviteCopied = document.getElementById("invite-copied");
   const inviteCloseBtn = document.getElementById("invite-close-btn");
   const installBtn = document.getElementById("install-btn");
+  const filterMonth = document.getElementById("filter-month");
   const filterDate = document.getElementById("filter-date");
   const filterName = document.getElementById("filter-name");
   const filterReset = document.getElementById("filter-reset");
@@ -1077,6 +1083,20 @@
     return y + "-" + m + "-" + day;
   }
 
+  function monthKey(ts) {
+    const d = new Date(ts);
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+  }
+
+  function currentMonthKey() {
+    return monthKey(Date.now());
+  }
+
+  function monthLabel(key) {
+    const [y, m] = key.split("-").map(Number);
+    return new Date(y, m - 1, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  }
+
   function dayLabel(key) {
     const [y, m, d] = key.split("-").map(Number);
     const date = new Date(y, m - 1, d);
@@ -1096,10 +1116,36 @@
     if (authors.includes(current)) filterName.value = current;
   }
 
+  // Defaults to the current calendar month automatically (no action
+  // needed when a new month starts — currentMonthKey() just returns a new
+  // value). Past months only appear once there's at least one message in
+  // them, and stay pickable from then on; "All Months" is always offered
+  // for anyone who wants the full history.
+  function populateMonthFilter() {
+    const nowKey = currentMonthKey();
+    const keys = new Set([nowKey, ...messages.map((m) => monthKey(m.createdAt))]);
+    const sorted = Array.from(keys).sort((a, b) => b.localeCompare(a));
+    const current = filterMonth.value || nowKey;
+    filterMonth.innerHTML = "";
+    for (const key of sorted) {
+      const opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = monthLabel(key) + (key === nowKey ? " (Current)" : "");
+      filterMonth.appendChild(opt);
+    }
+    const allOpt = document.createElement("option");
+    allOpt.value = "all";
+    allOpt.textContent = "All Months";
+    filterMonth.appendChild(allOpt);
+    filterMonth.value = current === "all" || sorted.includes(current) ? current : nowKey;
+  }
+
   function getFilteredMessages() {
+    const month = filterMonth.value;
     const date = filterDate.value;
     const name = filterName.value;
     return messages.filter((m) => {
+      if (month && month !== "all" && monthKey(m.createdAt) !== month) return false;
       if (date && dayKey(m.createdAt) !== date) return false;
       if (name && m.author !== name) return false;
       return true;
@@ -1116,6 +1162,7 @@
 
   function render() {
     populateNameFilter();
+    populateMonthFilter();
     const canPost = canPostOutcome();
     typeOutcomeBtn.hidden = !canPost;
     if (!canPost && currentType === "outcome") setType("income");
@@ -1127,7 +1174,7 @@
     // daily breakdown) that make those numbers up.
     const baseFiltered = getFilteredMessages();
     const filtered = canPost ? baseFiltered : baseFiltered.filter((m) => m.type !== "outcome");
-    const hasFilter = !!(filterDate.value || filterName.value);
+    const hasFilter = !!(filterDate.value || filterName.value || filterMonth.value !== currentMonthKey());
     totalsLabel.textContent = hasFilter ? "Filtered Totals" : "Totals";
 
     if (filtered.length === 0) {
@@ -1238,17 +1285,21 @@
     }
   }
 
+  filterMonth.addEventListener("change", render);
   filterDate.addEventListener("change", render);
   filterName.addEventListener("change", render);
   filterReset.addEventListener("click", () => {
+    filterMonth.value = currentMonthKey();
     filterDate.value = "";
     filterName.value = "";
     render();
   });
 
   function renderDailyPanel() {
+    const month = filterMonth.value;
     const name = filterName.value;
-    let source = name ? messages.filter((m) => m.author === name) : messages;
+    let source = month && month !== "all" ? messages.filter((m) => monthKey(m.createdAt) === month) : messages;
+    if (name) source = source.filter((m) => m.author === name);
     if (!canPostOutcome()) source = source.filter((m) => m.type !== "outcome");
     const byDay = new Map();
     for (const m of source) {
