@@ -157,6 +157,20 @@
     gap: 12px;
   }
 
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .brand-logo {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-full);
+    flex: 0 0 auto;
+    box-shadow: var(--shadow-sm);
+  }
+
   .eyebrow {
     font-family: "IBM Plex Mono", monospace;
     font-size: 11px;
@@ -960,9 +974,12 @@
 
   <header>
     <div class="header-top">
-      <div>
-        <div class="eyebrow">Group &middot; Shared Ledger</div>
-        <h1 id="group-title">Rowda Fee Information</h1>
+      <div class="brand">
+        <img class="brand-logo" src="icons/icon-192.png" alt="Rowdatul Iimaan school logo">
+        <div>
+          <div class="eyebrow">Group &middot; Shared Ledger</div>
+          <h1 id="group-title">Rowda Fee Information</h1>
+        </div>
       </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
         <button class="install-btn" id="install-btn" type="button" hidden>Install App</button>
