@@ -396,7 +396,10 @@
   }
 
   .filters #filter-month { width: 132px; }
-  .filters #filter-date { width: 148px; }
+  .filters .date-field { flex: 1 1 130px; max-width: 170px; }
+  .filters #filter-from, .filters #filter-to { width: 100%; }
+  .filters .search-field { flex: 1 1 100%; }
+  .filters #filter-search { width: 100%; }
   .filters #filter-name { width: 140px; }
 
   select {
@@ -999,9 +1002,13 @@
       <label for="filter-month">Month</label>
       <select id="filter-month"></select>
     </div>
-    <div class="field">
-      <label for="filter-date">Date</label>
-      <input id="filter-date" type="date">
+    <div class="field date-field">
+      <label for="filter-from">From</label>
+      <input id="filter-from" type="date">
+    </div>
+    <div class="field date-field">
+      <label for="filter-to">To</label>
+      <input id="filter-to" type="date">
     </div>
     <div class="field">
       <label for="filter-name">Member</label>
@@ -1011,6 +1018,10 @@
     </div>
     <button class="filter-reset" id="filter-reset" type="button">Reset</button>
     <button class="daily-btn" id="daily-btn" type="button">Daily Totals</button>
+    <div class="field search-field">
+      <label for="filter-search">Search</label>
+      <input id="filter-search" type="search" placeholder="Search phone, note, name or amount…" autocomplete="off">
+    </div>
   </div>
 
   <div class="totals-wrap">
@@ -1160,7 +1171,9 @@
   const inviteCloseBtn = document.getElementById("invite-close-btn");
   const installBtn = document.getElementById("install-btn");
   const filterMonth = document.getElementById("filter-month");
-  const filterDate = document.getElementById("filter-date");
+  const filterFrom = document.getElementById("filter-from");
+  const filterTo = document.getElementById("filter-to");
+  const filterSearch = document.getElementById("filter-search");
   const filterName = document.getElementById("filter-name");
   const filterReset = document.getElementById("filter-reset");
   const totalsLabel = document.getElementById("totals-label");
@@ -1296,14 +1309,45 @@
     filterMonth.value = current === "all" || sorted.includes(current) ? current : nowKey;
   }
 
-  function getFilteredMessages() {
+  function isDefaultRange() {
+    const today = currentDayKey();
+    return filterFrom.value === today && filterTo.value === today;
+  }
+
+  // Phone numbers are often typed with or without the leading 0, so a
+  // numeric query also matches on its digits alone (0615… finds 615…).
+  function matchesSearch(m, q, qDigits) {
+    const text = (m.text || "").toLowerCase();
+    const hay = text + " " + (m.author || "").toLowerCase() + " " + (typeof m.amount === "number" ? String(m.amount) : "");
+    if (hay.includes(q)) return true;
+    if (qDigits.length >= 3) return (m.text || "").replace(/\D/g, "").includes(qDigits);
+    return false;
+  }
+
+  function getFilteredMessages(opts) {
+    const ignoreRange = !!(opts && opts.ignoreRange);
     const month = filterMonth.value;
-    const date = filterDate.value;
+    let from = filterFrom.value;
+    let to = filterTo.value;
+    if (from && to && from > to) { const t = from; from = to; to = t; }
     const name = filterName.value;
+    const q = filterSearch.value.trim().toLowerCase();
+    const qDigits = q.replace(/\D/g, "").replace(/^0+/, "");
+    const hideOutcome = !canPostOutcome();
     return messages.filter((m) => {
       if (month && month !== "all" && monthKey(m.createdAt) !== month) return false;
-      if (date && dayKey(m.createdAt) !== date) return false;
+      if (!ignoreRange) {
+        const day = dayKey(m.createdAt);
+        if (from && day < from) return false;
+        if (to && day > to) return false;
+      }
       if (name && m.author !== name) return false;
+      if (q) {
+        // Outcome entries stay private to Abdalla: a text search must never
+        // reveal them (even through the totals) for anyone else.
+        if (hideOutcome && m.type === "outcome") return false;
+        if (!matchesSearch(m, q, qDigits)) return false;
+      }
       return true;
     });
   }
@@ -1330,7 +1374,7 @@
     // daily breakdown) that make those numbers up.
     const baseFiltered = getFilteredMessages();
     const filtered = canPost ? baseFiltered : baseFiltered.filter((m) => m.type !== "outcome");
-    const hasFilter = !!(filterDate.value !== currentDayKey() || filterName.value || filterMonth.value !== currentMonthKey());
+    const hasFilter = !!(!isDefaultRange() || filterName.value || filterSearch.value.trim() || filterMonth.value !== currentMonthKey());
     totalsLabel.textContent = hasFilter ? "Filtered Totals" : "Totals";
 
     if (filtered.length === 0) {
@@ -1441,21 +1485,35 @@
     }
   }
 
-  filterMonth.addEventListener("change", render);
-  filterDate.addEventListener("change", render);
+  // Picking a month shows that whole month (clears the date range); picking
+  // a date range searches across all months so the two never contradict.
+  filterMonth.addEventListener("change", () => {
+    filterFrom.value = "";
+    filterTo.value = "";
+    render();
+  });
+  function onRangeChange() {
+    if (filterFrom.value || filterTo.value) filterMonth.value = "all";
+    render();
+  }
+  filterFrom.addEventListener("change", onRangeChange);
+  filterTo.addEventListener("change", onRangeChange);
   filterName.addEventListener("change", render);
+  filterSearch.addEventListener("input", render);
   filterReset.addEventListener("click", () => {
     filterMonth.value = currentMonthKey();
-    filterDate.value = currentDayKey();
+    filterFrom.value = currentDayKey();
+    filterTo.value = currentDayKey();
     filterName.value = "";
+    filterSearch.value = "";
     render();
   });
 
   function renderDailyPanel() {
-    const month = filterMonth.value;
-    const name = filterName.value;
-    let source = month && month !== "all" ? messages.filter((m) => monthKey(m.createdAt) === month) : messages;
-    if (name) source = source.filter((m) => m.author === name);
+    // Honors month, member, search and — once the user picks one — the
+    // From/To range. The untouched default (today only) is ignored here so
+    // the daily breakdown still covers the whole selected month.
+    let source = getFilteredMessages({ ignoreRange: isDefaultRange() });
     if (!canPostOutcome()) source = source.filter((m) => m.type !== "outcome");
     const byDay = new Map();
     for (const m of source) {
@@ -1666,7 +1724,8 @@
     }
   });
 
-  filterDate.value = currentDayKey();
+  filterFrom.value = currentDayKey();
+  filterTo.value = currentDayKey();
   openGateIfNeeded();
   render();
 })();
