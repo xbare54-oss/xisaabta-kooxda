@@ -401,6 +401,7 @@
   .filters .search-field { flex: 1 1 100%; }
   .filters #filter-search { width: 100%; }
   .filters #filter-name { width: 140px; }
+  .filters #filter-type { width: 112px; }
 
   select {
     font-family: "Work Sans", system-ui, sans-serif;
@@ -1016,6 +1017,14 @@
         <option value="">All</option>
       </select>
     </div>
+    <div class="field">
+      <label for="filter-type">Type</label>
+      <select id="filter-type">
+        <option value="">All</option>
+        <option value="income">Income</option>
+        <option value="outcome">Outcome</option>
+      </select>
+    </div>
     <button class="filter-reset" id="filter-reset" type="button">Reset</button>
     <button class="daily-btn" id="daily-btn" type="button">Daily Totals</button>
     <div class="field search-field">
@@ -1174,6 +1183,7 @@
   const filterFrom = document.getElementById("filter-from");
   const filterTo = document.getElementById("filter-to");
   const filterSearch = document.getElementById("filter-search");
+  const filterType = document.getElementById("filter-type");
   const filterName = document.getElementById("filter-name");
   const filterReset = document.getElementById("filter-reset");
   const totalsLabel = document.getElementById("totals-label");
@@ -1334,6 +1344,7 @@
     const q = filterSearch.value.trim().toLowerCase();
     const qDigits = q.replace(/\D/g, "").replace(/^0+/, "");
     const hideOutcome = !canPostOutcome();
+    const type = filterType.value;
     return messages.filter((m) => {
       if (month && month !== "all" && monthKey(m.createdAt) !== month) return false;
       if (!ignoreRange) {
@@ -1342,6 +1353,12 @@
         if (to && day > to) return false;
       }
       if (name && m.author !== name) return false;
+      if (type) {
+        // Only entries that carry an amount count as income / outcome;
+        // plain notes drop out while a type is selected.
+        if (typeof m.amount !== "number" || m.amount <= 0) return false;
+        if ((m.type === "outcome") !== (type === "outcome")) return false;
+      }
       if (q) {
         // Outcome entries stay private to Abdalla: a text search must never
         // reveal them (even through the totals) for anyone else.
@@ -1374,7 +1391,12 @@
     // daily breakdown) that make those numbers up.
     const baseFiltered = getFilteredMessages();
     const filtered = canPost ? baseFiltered : baseFiltered.filter((m) => m.type !== "outcome");
-    const hasFilter = !!(!isDefaultRange() || filterName.value || filterSearch.value.trim() || filterMonth.value !== currentMonthKey());
+    // Outcome entries are Abdalla's to see: everyone else only gets Income.
+    const outcomeOpt = filterType.querySelector('option[value="outcome"]');
+    outcomeOpt.hidden = !canPost;
+    outcomeOpt.disabled = !canPost;
+    if (!canPost && filterType.value === "outcome") filterType.value = "";
+    const hasFilter = !!(filterType.value || !isDefaultRange() || filterName.value || filterSearch.value.trim() || filterMonth.value !== currentMonthKey());
     totalsLabel.textContent = hasFilter ? "Filtered Totals" : "Totals";
 
     if (filtered.length === 0) {
@@ -1499,12 +1521,14 @@
   filterFrom.addEventListener("change", onRangeChange);
   filterTo.addEventListener("change", onRangeChange);
   filterName.addEventListener("change", render);
+  filterType.addEventListener("change", render);
   filterSearch.addEventListener("input", render);
   filterReset.addEventListener("click", () => {
     filterMonth.value = currentMonthKey();
     filterFrom.value = currentDayKey();
     filterTo.value = currentDayKey();
     filterName.value = "";
+    filterType.value = "";
     filterSearch.value = "";
     render();
   });
